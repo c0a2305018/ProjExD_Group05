@@ -6,7 +6,7 @@ import time
 import pygame as pg
 
 
-WIDTH, HEIGHT = 1000, 600  # ゲームウィンドウの幅，高さ
+WIDTH, HEIGHT = 1000, 800  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -185,8 +185,31 @@ class NeoBeam:
         
     def gen_beams(self) -> list[Beam]:
         return [Beam(self.bird, angle) for angle in range(-50, +51, int(100/(self.num-1)))]
-      
-   
+
+class ReflectBeam(Beam):
+    """
+    一回反射したらビームが消えるクラス
+    """
+    def __init__(self, bird: Bird, angle0 = 0):
+        super().__init__(bird, angle0)
+        self.reflected = False
+        self.cum = 0
+
+    def update(self):
+        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
+        yoko, tate = check_bound(self.rect)
+        if self.cum > 100:
+            if check_bound(self.rect) != (True, True):
+                self.kill()
+        elif self.reflected == False:
+            if not yoko:
+                self.vx *= -1
+                self.image = pg.transform.flip(self.image, True, False)
+            if not tate:
+                self.vy *= -1
+                self.image = pg.transform.rotozoom(self.image, 180, 1)
+            self.cum += 1
+
 class Explosion(pg.sprite.Sprite):
     """
     爆発に関するクラス
@@ -324,6 +347,7 @@ def main():
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
     neobeams = pg.sprite.Group()
+    reflectbeams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
 
@@ -341,13 +365,16 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN:
                 if key_lst[pg.K_LSHIFT]  and event.key == pg.K_SPACE:
-                    print("a")
                     beams.add(NeoBeam(bird, 5).gen_beams())
                 elif event.key == pg.K_SPACE:
                     beam = Beam(bird)
                     beams.add(Beam(bird))
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_h:
+                if score.value >= 5:
+                    score.value -= 5
+                    beams.add(ReflectBeam(bird))
             if event.type == pg.KEYDOWN and event.key == pg.K_e:
                 if score.value >= 20:
                     score.value -= 20
@@ -396,6 +423,8 @@ def main():
         bird.update(key_lst, screen)
         beams.update()
         beams.draw(screen)
+        reflectbeams.update()
+        reflectbeams.draw(screen)
         emys.update()
         emys.draw(screen)
         bombs.update()

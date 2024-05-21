@@ -175,7 +175,7 @@ class Beam(pg.sprite.Sprite):
             self.kill()
 
 
-class NeoBeam:
+class NeoBeam :
     """
     ビーム複数発射
     """
@@ -333,6 +333,7 @@ def main():
 
 
     tmr = 0
+    frame = 200 #オルギル 敵の出現度を上げるためフレームを初期化
     clock = pg.time.Clock()
     while True:
         key_lst = pg.key.get_pressed()
@@ -340,8 +341,8 @@ def main():
             if event.type == pg.QUIT:
                 return 0
             if event.type == pg.KEYDOWN:
-                if key_lst[pg.K_LSHIFT]  and event.key == pg.K_SPACE:
-                    print("a")
+                if key_lst[pg.K_LSHIFT]  and event.key == pg.K_SPACE and (score.value >= 100): #オルギルーこの技は最初から使えると簡単なのでスコアが何点超えると使えるようになると設定
+                   # print("a")
                     beams.add(NeoBeam(bird, 5).gen_beams())
                 elif event.key == pg.K_SPACE:
                     beam = Beam(bird)
@@ -352,9 +353,14 @@ def main():
                 if score.value >= 20:
                     score.value -= 20
                     emp.activate()
+            if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT: #オルギル　前回追加技能をちょっと直した
+                if score.value > 200: #消費スコアが200より大きい
+                #K_LSHIFT から K_RSHIFTに変更
+                    score.value -= 200  
+                    gravities.add(Gravity(100)) #オルギル　400が長い過ぎるので100に変更
         screen.blit(bg_img, [0, 0])
 
-        if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
+        if tmr%frame == 0:  #オルギルー200フレームに1回，敵機を出現させる
             emys.add(Enemy())
 
         for emy in emys:
@@ -379,11 +385,7 @@ def main():
                 time.sleep(2)
                 return
 
-            return        
-        if key_lst[pg.K_LSHIFT] and score.value > 200: #消費スコアが200より大きい
-            score.value -= 200  
-            gravities.add(Gravity(400))  
-        
+            return             
         for enemy in emys:
             for gravity in gravities:
                 if pg.sprite.collide_rect(enemy, gravity):
@@ -407,8 +409,19 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+        """"
+        オルギル
 
-
+        スコアがある時点を超えると敵の出現度が上がった行く
+        """
+        if score.value >= 100: #オルギル　スコアが100超えるとフレームが80になる
+            frame = 80
+        if score.value >= 500: #オルギル　スコアが500超えるとフレームが80になる
+            frame = 50
+        if score.value >= 800: #オルギル　スコアが800超えるとフレームが80になる
+            frame = 20
+        
+        
 if __name__ == "__main__":
     pg.init()
     main()

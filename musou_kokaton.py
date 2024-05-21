@@ -73,6 +73,7 @@ class Bird(pg.sprite.Sprite):
         self.speed = 10
         self.high_speed = 20 #feature1
         self.high = False
+        # self.life = 3
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -252,7 +253,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 3
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -260,6 +261,26 @@ class Score:
     def update(self, screen: pg.Surface):
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
+
+
+
+class Life:
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)
+        self.color = (255, 0, 0)
+        self.value = 3
+        self.image = self.font.render(f"Life: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (10, 10)
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"Life: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+
+
+
 
 class Gravity(pg.sprite.Sprite):
     """
@@ -276,7 +297,8 @@ class Gravity(pg.sprite.Sprite):
     def update(self):
         self.life -= 1
         if self.life < 0:
-            self.kill()           
+            self.kill()   
+
 
 class EMP(pg.sprite.Sprite):
     """
@@ -319,6 +341,7 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
+    life = Life()
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
@@ -338,7 +361,7 @@ def main():
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                return 0
+                return
             if event.type == pg.KEYDOWN:
                 if key_lst[pg.K_LSHIFT]  and event.key == pg.K_SPACE:
                     print("a")
@@ -353,6 +376,7 @@ def main():
                     score.value -= 20
                     emp.activate()
         screen.blit(bg_img, [0, 0])
+
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
@@ -371,15 +395,16 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             #score.value += 1  # 1点アップ
 
-        for bomb in pg.sprite.spritecollide(bird, bombs, True):
-            if bomb.state == "active":
-                bird.change_img(8, screen) # こうかとん悲しみエフェクト
-                score.update(screen)
-                pg.display.update()
-                time.sleep(2)
-                return
+        if len (pg.sprite.spritecollide(bird, bombs, True)) != 0:  
+            life.value += -1    
 
-            return        
+        if life.value == 0:
+            bird.change_img(8, screen) # こうかとん悲しみエフェクト
+            score.update(screen)
+            pg.display.update()
+            time.sleep(2)
+            return 
+
         if key_lst[pg.K_LSHIFT] and score.value > 200: #消費スコアが200より大きい
             score.value -= 200  
             gravities.add(Gravity(400))  
@@ -404,6 +429,7 @@ def main():
         exps.draw(screen)
         emp.update()
         score.update(screen)
+        life.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)

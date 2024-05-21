@@ -261,6 +261,7 @@ class Score:
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+
 class Gravity(pg.sprite.Sprite):
     """
     画面全体を覆う重力場を発生させるクラス
@@ -341,7 +342,6 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN:
                 if key_lst[pg.K_LSHIFT]  and event.key == pg.K_SPACE:
-                    print("a")
                     beams.add(NeoBeam(bird, 5).gen_beams())
                 elif event.key == pg.K_SPACE:
                     beam = Beam(bird)
@@ -378,9 +378,8 @@ def main():
                 pg.display.update()
                 time.sleep(2)
                 return
-
-            return        
-        if key_lst[pg.K_LSHIFT] and score.value > 200: #消費スコアが200より大きい
+        
+        if key_lst[pg.K_RSHIFT] and score.value > 200: #消費スコアが200より大きい
             score.value -= 200  
             gravities.add(Gravity(400))  
         
@@ -390,6 +389,13 @@ def main():
                     exps.add(Explosion(enemy, 100))
                     enemy.kill()  
 
+        if score.value >= 1000: #スコアが1000点に達したらゲームクリア
+            fonto = pg.font.Font(None, 80)
+            txt = fonto.render("GameClear", True, (0, 255, 0))
+            screen.blit(txt, [WIDTH/2-150, HEIGHT/2-100])
+            pg.display.update()
+            time.sleep(5)
+            return
         
         gravities.update()
         gravities.draw(screen)    

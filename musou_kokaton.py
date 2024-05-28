@@ -389,6 +389,7 @@ def main():
     gravities = pg.sprite.Group()   # feature2
 
     tmr = 0
+    frame = 200 #オルギル 敵の出現度を上げるためフレームを初期化
     clock = pg.time.Clock()
     boss_tmr = 0
     while True:
@@ -397,7 +398,8 @@ def main():
             if event.type == pg.QUIT:
                 return 0
             if event.type == pg.KEYDOWN:
-                if key_lst[pg.K_LSHIFT] and event.key == pg.K_SPACE:
+                if key_lst[pg.K_LSHIFT] and event.key == pg.K_SPACE and (score.value >= 100): #オルギルーこの技は最初から使えると簡単なのでスコアが何点超えると使えるようになると設定:
+
                     beams.add(NeoBeam(bird, 5).gen_beams())
                 elif event.key == pg.K_SPACE:
                     beam = Beam(bird)
@@ -408,13 +410,19 @@ def main():
                 if score.value >= 5:
                     score.value -= 5
                     beams.add(ReflectBeam(bird))
-            if event.type == pg.KEYDOWN and event.key == pg.K_e:
+            if event.type == pg.KEYDOWN and event.key == pg.K_e: 
                 if score.value >= 20:
                     score.value -= 20
                     emp.activate()
+            if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT: #オルギル　前回追加技能をちょっと直した
+                if score.value > 200: #消費スコアが200より大きい
+                #K_LSHIFT から K_RSHIFTに変更
+                    score.value -= 200  
+                    gravities.add(Gravity(100)) #オルギル　400が長い過ぎるので100に変更
         screen.blit(bg_img, [0, 0])
 
-        if tmr % 200 == 0:  # 200フレームに1回，敵機を出現させる
+        if tmr % frame == 0:  # 200フレームに1回，敵機を出現させる
+
             emys.add(Enemy())
 
         boss_tmr += clock.get_time() / 1000  # 時間の経過を秒単位
@@ -466,13 +474,9 @@ def main():
 
         if key_lst[pg.K_RSHIFT] and score.value > 200:  # 消費スコアが200より大きい
             score.value -= 200
-            gravities.add(Gravity(400))
+            gravities.add(Gravity(100))
+            
 
-        
-        if key_lst[pg.K_RSHIFT] and score.value > 200: #消費スコアが200より大きい
-            score.value -= 200  
-            gravities.add(Gravity(400))  
-        
         for enemy in emys:
             for gravity in gravities:
                 if pg.sprite.collide_rect(enemy, gravity):
@@ -507,10 +511,20 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+        """"
+        オルギル
+
+        スコアがある時点を超えると敵の出現度が上がった行く
+        """
+        if score.value >= 100: #オルギル　スコアが100超えるとフレームが60になる
+            frame = 60
+        if score.value >= 300: #オルギル　スコアが300超えるとフレームが40になる
+            frame = 40
+        if score.value >= 600: #オルギル　スコアが600超えるとフレームが20になる
+            frame = 20
 
 
 if __name__ == "__main__":
     pg.init()
     main()
     pg.quit()
-    sys.exit()

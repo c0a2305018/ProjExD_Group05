@@ -1,4 +1,3 @@
-
 import math
 import os
 import random
@@ -469,11 +468,24 @@ def main():
             score.value -= 200
             gravities.add(Gravity(400))
 
+        
+        if key_lst[pg.K_RSHIFT] and score.value > 200: #消費スコアが200より大きい
+            score.value -= 200  
+            gravities.add(Gravity(400))  
+        
         for enemy in emys:
             for gravity in gravities:
                 if pg.sprite.collide_rect(enemy, gravity):
                     exps.add(Explosion(enemy, 100))
                     enemy.kill()
+
+        if score.value >= 1000: #スコアが1000点に達したらゲームクリア
+            fonto = pg.font.Font(None, 80)
+            txt = fonto.render("GameClear", True, (0, 255, 0))
+            screen.blit(txt, [WIDTH/2-150, HEIGHT/2-100])
+            pg.display.update()
+            time.sleep(5)
+            return
 
         gravities.update()
         gravities.draw(screen)

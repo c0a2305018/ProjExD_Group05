@@ -6,7 +6,7 @@ import time
 import pygame as pg
 
 
-WIDTH, HEIGHT = 1000, 800  # ゲームウィンドウの幅，高さ
+WIDTH, HEIGHT = 1000, 600  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -73,6 +73,7 @@ class Bird(pg.sprite.Sprite):
         self.speed = 10
         self.high_speed = 20  # feature1
         self.high = False
+        # self.life = 3
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -317,6 +318,25 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+
+class Life:
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)
+        self.color = (255, 0, 0)
+        self.value = 3
+        self.image = self.font.render(f"Life: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (10, 10)
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"Life: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+
+
+
+
 class Gravity(pg.sprite.Sprite):
     """
     画面全体を覆う重力場を発生させるクラス
@@ -334,6 +354,7 @@ class Gravity(pg.sprite.Sprite):
         if self.life < 0:
             self.kill()           
             
+
 
 class EMP(pg.sprite.Sprite):
     """
@@ -376,6 +397,7 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
+    life = Life()
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
@@ -396,7 +418,7 @@ def main():
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                return 0
+                return
             if event.type == pg.KEYDOWN:
                 if key_lst[pg.K_LSHIFT] and event.key == pg.K_SPACE and (score.value >= 100): #オルギルーこの技は最初から使えると簡単なのでスコアが何点超えると使えるようになると設定:
 
@@ -421,8 +443,8 @@ def main():
                     gravities.add(Gravity(100)) #オルギル　400が長い過ぎるので100に変更
         screen.blit(bg_img, [0, 0])
 
-        if tmr % frame == 0:  # 200フレームに1回，敵機を出現させる
 
+        if tmr % frame == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
 
         boss_tmr += clock.get_time() / 1000  # 時間の経過を秒単位
@@ -464,13 +486,15 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50)) # 爆発エフェクト
 
-        for bomb in pg.sprite.spritecollide(bird, bombs, True):
-            if bomb.state == "active":
-                bird.change_img(8, screen)  # こうかとん悲しみエフェクト
-                score.update(screen)
-                pg.display.update()
-                time.sleep(2)
-                return
+        if len (pg.sprite.spritecollide(bird, bombs, True)) != 0:  
+            life.value += -1    
+
+        if life.value == 0:
+            bird.change_img(8, screen) # こうかとん悲しみエフェクト
+            score.update(screen)
+            pg.display.update()
+            time.sleep(2)
+            return 
 
         if key_lst[pg.K_RSHIFT] and score.value > 200:  # 消費スコアが200より大きい
             score.value -= 200
@@ -508,6 +532,7 @@ def main():
         exps.draw(screen)
         emp.update()
         score.update(screen)
+        life.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
